@@ -535,6 +535,7 @@ public class PostgresReplication {
                 return conn;
             } catch (SQLException e) {
                 lastException = e;
+                logger.error("Failed to connect to postgres", e);
 
                 try {
                     Thread.sleep(3000);
