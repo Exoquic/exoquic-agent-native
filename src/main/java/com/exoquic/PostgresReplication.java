@@ -42,7 +42,7 @@ public class PostgresReplication {
     @ConfigProperty(name = "postgres.port", defaultValue = "5432")
     String dbPort;
 
-    @ConfigProperty(name = "postgres.name")
+    @ConfigProperty(name = "postgres.database")
     String dbName;
 
     @ConfigProperty(name = "postgres.user")
