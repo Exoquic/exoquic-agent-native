@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  exoquic-agent:
+    build: .
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DATABASE=exoquic
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - EXOQUIC_ENDPOINT=https://api.exoquic.com
+      - EXOQUIC_API_KEY=your-api-key-here
+      - REPLICATION_SLOT_NAME=realtime_slot
+      - PUBLICATION_NAME=realtime_publication
+      - LOG_LEVEL=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=exoquic
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: >
+      postgres
+      -c wal_level=logical
+      -c max_replication_slots=5
+      -c max_wal_senders=5
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

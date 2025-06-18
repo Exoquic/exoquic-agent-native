@@ -1,0 +1,28 @@
+{
+  "name": "exoquic-agent-nodejs",
+  "version": "1.0.0",
+  "description": "PostgreSQL replication agent for Exoquic platform - Node.js port",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "dependencies": {
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  },
+  "keywords": [
+    "postgresql",
+    "replication",
+    "cdc",
+    "logical-replication",
+    "database"
+  ],
+  "author": "",
+  "license": "ISC"
+}
