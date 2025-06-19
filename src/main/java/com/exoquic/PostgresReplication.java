@@ -75,6 +75,12 @@ public class PostgresReplication {
 
     @Inject
     JsonEventConverter jsonEventConverter;
+    
+    @Inject
+    WebSocketEventBroadcaster webSocketEventBroadcaster;
+    
+    @Inject
+    ApiKeyService apiKeyService;
 
     public PostgresReplication() {
         this.transactionBuffer = new TransactionBuffer(this::handleCommittedTransaction);
@@ -89,6 +95,7 @@ public class PostgresReplication {
     @PostConstruct
     public void start() {
         try {
+            apiKeyService.initialize();
             executor.submit(this::startReplication);
         } catch (Exception e) {
             logger.error("Failed to start replication: {}", e.getMessage(), e);
@@ -347,10 +354,13 @@ public class PostgresReplication {
 
             try {
                 String jsonPayload = jsonEventConverter.convertToJson(message);
-                sendToPlatform(jsonPayload);
                 
-                logger.info("Sent {} event for table {} to platform", 
-                    message.getOperation(), message.getTable());
+                sendToPlatform(jsonPayload);
+                broadcastToWebSocketClients(message.getTable(), jsonPayload);
+                
+                logger.info("Sent {} event for table {} to platform and {} WebSocket clients", 
+                    message.getOperation(), message.getTable(), 
+                    webSocketEventBroadcaster.getListenerCount(message.getTable()));
                     
             } catch (Exception e) {
                 logger.error("Failed to process event for table {}: {}", 
@@ -384,6 +394,14 @@ public class PostgresReplication {
 
         } catch (Exception e) {
             logger.error("Error creating event payload: {}", e.getMessage(), e);
+        }
+    }
+    
+    private void broadcastToWebSocketClients(String tableName, String jsonPayload) {
+        try {
+            webSocketEventBroadcaster.broadcastTableEvent(tableName, jsonPayload);
+        } catch (Exception e) {
+            logger.error("Error broadcasting to WebSocket clients for table {}: {}", tableName, e.getMessage(), e);
         }
     }
 
